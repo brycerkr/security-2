@@ -42,6 +42,11 @@ INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567
 ### APPLICATION SETUP ###
 app = Flask(__name__)
 app.database = "db.sqlite3"
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,  # Prevent JS access
+    SESSION_COOKIE_SECURE=True,    # Only over HTTPS
+    SESSION_COOKIE_SAMESITE='Lax'  # Prevent CSRF
+)
 app.secret_key = os.urandom(32)
 
 ### Globally setting CSP headers
@@ -85,22 +90,35 @@ def notes():
             note = request.form['noteinput']
             db = connect_db()
             c = db.cursor()
-            statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,%s,'%s','%s',%s);""" %(session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999))
+            """ Legacy vulnerable code:
+            statement = ""INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,%s,'%s','%s',%s);"" %(session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999))
             print(statement)
             c.execute(statement)
+            """
+            statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,?,?,?,?);"""
+            print(statement)
+            c.execute(statement, (session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999)))
             db.commit()
             db.close()
         elif request.form['submit_button'] == 'import note':
             noteid = request.form['noteid']
             db = connect_db()
             c = db.cursor()
-            statement = """SELECT * from NOTES where publicID = %s""" %noteid
+            """ Legacy vulnerable code:
+            statement = ""SELECT * from NOTES where publicID = %s"" %noteid
             c.execute(statement)
+            """
+            statement = """SELECT * from NOTES where publicID = ?"""
+            c.execute(statement, (noteid,))
             result = c.fetchall()
             if(len(result)>0):
                 row = result[0]
-                statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,%s,'%s','%s',%s);""" %(session['userid'],row[2],row[3],row[4])
+                """ Legacy vulnerable code:
+                statement = ""INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,%s,'%s','%s',%s);"" %(session['userid'],row[2],row[3],row[4])
                 c.execute(statement)
+                """
+                statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,?,?,?,?);"""
+                c.execute(statement, (session['userid'],row[2],row[3],row[4]))
             else:
                 importerror="No such note with that ID!"
             db.commit()
@@ -108,9 +126,14 @@ def notes():
     
     db = connect_db()
     c = db.cursor()
+    """ Legacy vulnerable code:
     statement = "SELECT * FROM notes WHERE assocUser = %s;" %session['userid']
     print(statement)
     c.execute(statement)
+    """
+    statement = "SELECT * FROM notes WHERE assocUser = ?;"
+    print(statement)
+    c.execute(statement, (session['userid'],))
     notes = c.fetchall()
     print(notes)
     
@@ -125,10 +148,14 @@ def login():
         password = request.form['password']
         db = connect_db()
         c = db.cursor()
+        """ Legacy vulnerable code:
         statement = "SELECT * FROM users WHERE username = '%s' AND password = '%s';" %(username, password)
-        c.execute(statement)
+        c.execute(statement) 
+        """
+        statement = "SELECT * FROM users WHERE username = ? AND password = ?;"
+        args = (username, password)
+        c.execute(statement, args)
         result = c.fetchall()
-
         if len(result) > 0:
             session.clear()
             session['logged_in'] = True
@@ -146,28 +173,37 @@ def register():
     usererror = ""
     passworderror = ""
     if request.method == 'POST':
-        
-
         username = request.form['username']
         password = request.form['password']
         db = connect_db()
         c = db.cursor()
-        pass_statement = """SELECT * FROM users WHERE password = '%s';""" %password
-        user_statement = """SELECT * FROM users WHERE username = '%s';""" %username
+        """ Legacy vulnerable code:
+        pass_statement = ""SELECT * FROM users WHERE password = '%s';"" %password
+        user_statement = ""SELECT * FROM users WHERE username = '%s';"" %username
         c.execute(pass_statement)
+        """
+        pass_statement = """SELECT * FROM users WHERE password = ?;"""
+        user_statement = """SELECT * FROM users WHERE username = ?;"""
+        c.execute(pass_statement, (password,))
         if(len(c.fetchall())>0):
             errored = True
             passworderror = "That password is already in use by someone else!"
 
-        c.execute(user_statement)
+        c.execute(user_statement, (username,)) 
+        # c.execute(user_statement) Legacy vulnerable code
         if(len(c.fetchall())>0):
             errored = True
             usererror = "That username is already in use by someone else!"
 
         if(not errored):
-            statement = """INSERT INTO users(id,username,password) VALUES(null,'%s','%s');""" %(username,password)
+            """ Legacy vulnerable code:
+            statement = ""INSERT INTO users(id,username,password) VALUES(null,'%s','%s');"" %(username,password)
             print(statement)
             c.execute(statement)
+            """ 
+            statement = """INSERT INTO users(id,username,password) VALUES(null,?,?);"""
+            print(statement)
+            c.execute(statement, (username,password))
             db.commit()
             db.close()
             return f"""<html>
@@ -200,9 +236,24 @@ if __name__ == "__main__":
     if(len(sys.argv)==2):
         runport = sys.argv[1]
     try:
-        app.run(host='0.0.0.0', port=runport) # runs on machine ip address to make it visible on netowrk
+        app.run(host='0.0.0.0', port=runport, debug=False) # runs on machine ip address to make it visible on netowrk
     except:
         print("Something went wrong. the usage of the server is either")
         print("'python3 app.py' (to start on port 5000)")
         print("or")
         print("'sudo python3 app.py 80' (to run on any other port)")
+<<<<<<< HEAD
+=======
+
+@app.after_request
+def set_csp_headers(response):
+    response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:;"
+    )
+    # Fix Version Info vulnerability
+    response.headers.pop('Server', None)
+    return response
+>>>>>>> 6e021b69ce70058f8d0976623f16ca8a54127525
