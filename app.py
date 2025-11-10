@@ -2,8 +2,6 @@ import json, sqlite3, click, functools, os, hashlib,time, random, sys
 from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
 
 
-
-
 ### DATABASE FUNCTIONS ###
 
 def connect_db():
@@ -45,6 +43,20 @@ INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567
 app = Flask(__name__)
 app.database = "db.sqlite3"
 app.secret_key = os.urandom(32)
+
+### Globally setting CSP headers
+@app.after_request
+def set_csp_headers(response):
+    print("Setting CSP headers")
+    response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' https://cdn.jsdelivr.net; "
+            "style-src 'self';"
+            "img-src 'self' data:;"
+            "form-action 'self'; "
+            "frame-ancestors 'none';"
+    )
+    return response
 
 ### ADMINISTRATOR'S PANEL ###
 def login_required(view):
@@ -194,13 +206,3 @@ if __name__ == "__main__":
         print("'python3 app.py' (to start on port 5000)")
         print("or")
         print("'sudo python3 app.py 80' (to run on any other port)")
-
-@app.after_request
-def set_csp_headers(response):
-    response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:;"
-    )
-    return response
