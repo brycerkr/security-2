@@ -61,6 +61,9 @@ def set_csp_headers(response):
             "form-action 'self'; "
             "frame-ancestors 'none';"
     )
+
+    response.headers["X-Content-Type-Options"] = "nosniff" #x-content-type-options header 
+
     # Fix Version Info vulnerability (doesn't work)
     response.headers.pop('Server', None)
     return response
