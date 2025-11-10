@@ -239,4 +239,6 @@ def set_csp_headers(response):
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:;"
     )
+    # Fix Version Info vulnerability
+    response.headers.pop('Server', None)
     return response
