@@ -61,7 +61,7 @@ def set_csp_headers(response):
             "form-action 'self'; "
             "frame-ancestors 'none';"
     )
-    # Fix Version Info vulnerability
+    # Fix Version Info vulnerability (doesn't work)
     response.headers.pop('Server', None)
     return response
 
