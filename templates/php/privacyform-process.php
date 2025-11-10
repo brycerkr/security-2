@@ -28,7 +28,6 @@ if (empty($_POST["terms"])) {
 $EmailTo = "yourname@domain.com";
 $Subject = "New privacy request from Aria landing page";
 
-// prepare email body text
 $Body = "";
 $Body .= "Name: ";
 $Body .= $name;
@@ -43,9 +42,8 @@ $Body .= "Terms: ";
 $Body .= $terms;
 $Body .= "\n";
 
-// send email
 $success = mail($EmailTo, $Subject, $Body, "From:".$email);
-// redirect to success page
+
 if ($success && $errorMSG == ""){
    echo "success";
 }else{

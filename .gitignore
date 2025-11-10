@@ -1,2 +1,4 @@
 *.swp
 *.sqlite3
+
+venv/
