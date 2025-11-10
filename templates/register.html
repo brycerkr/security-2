@@ -113,7 +113,8 @@
                           <p class="p-large"><strong>Error:</strong> {{ passworderror }}
                         {% endif %}
                             <br></br>
-                          <input class="btn-solid-lg" type="submit" value="Sign up">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input class="btn-solid-lg" type="submit" value="Sign up">
                         </form>
                         
                       </div>

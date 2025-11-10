@@ -280,6 +280,7 @@ ol, ul, dl {
               <label for="note">New note:</label>
               <textarea name="noteinput" placeholder=">Enter text here..." class="textfield form-control" value={{ request.form.noteinput }}></textarea><br>
             </div>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="add note">
         </form> 
         
@@ -288,6 +289,7 @@ ol, ul, dl {
               <label for="note">Import a note from someone else:</label>
               <input class="form-control notes__input__no-margin" type="text" placeholder="XXXXXXXXXX" name="noteid" value={{request.form.noteid}}>
             </div>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="import note">
         </form> 
         {% if importerror %}
