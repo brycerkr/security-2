@@ -93,6 +93,7 @@
                 <input type="password" placeholder="Password" name="password" value="{{
           request.form.password }}">
                 <input class="btn-solid-lg" type="submit" value="Login">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               </form>
               {% if error %}
               <p class="p-large"><strong>Error:</strong> {{ error }}

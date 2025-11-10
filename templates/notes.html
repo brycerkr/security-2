@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
-    <link  href="http://fonts.googleapis.com/css?
-    family=Reenie+Beanie:regular" 
+    <link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" 
     rel="stylesheet"
     type="text/css">
-    <style>
+    <style nonce="{{ g.nonce }}">
         *{
   margin:0;
   padding:0;
@@ -251,9 +250,11 @@ ol, ul, dl {
         <link href={{ url_for('static',filename='css/magnific-popup.css') }} rel="stylesheet">
         <link href={{ url_for('static',filename='css/styles.css') }} rel="stylesheet">
     </head>
-
-
-    <body style="background-color:#fff;">
+    
+    <style nonce="{{ g.nonce }}">
+        body { background-color: #fff; }
+    </style>
+    <body>
       <section class="notes__background-image">
         <a href="/logout/" class="notes__logout btn-solid-lg">Logout</a>
         <article class="notes__background-title-container">
@@ -276,6 +277,7 @@ ol, ul, dl {
               <label for="note">New note:</label>
               <textarea name="noteinput" placeholder=">Enter text here..." class="textfield form-control" value={{ request.form.noteinput }}></textarea><br>
             </div>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="add note">
         </form> 
         
@@ -284,6 +286,7 @@ ol, ul, dl {
               <label for="note">Import a note from someone else:</label>
               <input class="form-control notes__input__no-margin" type="text" placeholder="XXXXXXXXXX" name="noteid" value={{request.form.noteid}}>
             </div>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="import note">
         </form> 
         {% if importerror %}
