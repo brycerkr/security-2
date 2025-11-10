@@ -1,4 +1,4 @@
-import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys
+import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt
 from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
 from flask_wtf.csrf import CSRFProtect
 
@@ -162,16 +162,21 @@ def login():
         statement = "SELECT * FROM users WHERE username = '%s' AND password = '%s';" %(username, password)
         c.execute(statement) 
         """
-        statement = "SELECT * FROM users WHERE username = ? AND password = ?;"
-        args = (username, password)
+        statement = "SELECT * FROM users WHERE username = ?;"
+        args = (username,)
         c.execute(statement, args)
-        result = c.fetchall()
-        if len(result) > 0:
-            session.clear()
-            session['logged_in'] = True
-            session['userid'] = result[0][0]
-            session['username']=result[0][1]
-            return redirect(url_for('index'))
+        result = c.fetchone()
+        if result:
+            stored_pw = result[2]
+            authenticated = False
+            authenticated = bcrypt.checkpw(password.encode('utf-8'), stored_pw.encode('utf-8'))
+            if authenticated:
+                session.clear()
+                session['logged_in'] = True
+                session['userid'] = result[0]
+                session['username']=result[1]
+                return redirect(url_for('index'))            
+            else: error = "Wrong username or password!"
         else:
             error = "Wrong username or password!"
     return render_template('login.html',error=error)
@@ -185,6 +190,7 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        pw_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         db = connect_db()
         c = db.cursor()
         """ Legacy vulnerable code:
@@ -192,15 +198,15 @@ def register():
         user_statement = ""SELECT * FROM users WHERE username = '%s';"" %username
         c.execute(pass_statement)
         """
-        pass_statement = """SELECT * FROM users WHERE password = ?;"""
-        user_statement = """SELECT * FROM users WHERE username = ?;"""
+        """ Legacy vulnerable code
+        pass_statement = ""SELECT * FROM users WHERE password = ?;""
         c.execute(pass_statement, (password,))
-        """ Legacy vulnerable code:
         if(len(c.fetchall())>0):
             errored = True
             passworderror = "That password is already in use by someone else!"
         """
 
+        user_statement = """SELECT * FROM users WHERE username = ?;"""
         c.execute(user_statement, (username,)) 
         # c.execute(user_statement) Legacy vulnerable code
         if(len(c.fetchall())>0):
@@ -215,7 +221,7 @@ def register():
             """ 
             statement = """INSERT INTO users(id,username,password) VALUES(null,?,?);"""
             print(statement)
-            c.execute(statement, (username,password))
+            c.execute(statement, (username,pw_hash))
             db.commit()
             db.close()
             return f"""<html>
