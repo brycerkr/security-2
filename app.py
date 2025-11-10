@@ -1,4 +1,4 @@
-import json, sqlite3, click, functools, os, hashlib,time, random, sys
+import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys
 from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
 from flask_wtf.csrf import CSRFProtect
 
@@ -50,6 +50,10 @@ app.config.update(
 )
 app.secret_key = os.urandom(32)
 
+@app.before_request
+def generate_nonce():
+    g.nonce = secrets.token_urlsafe(16)
+
 csrf = CSRFProtect(app)
 
 ### Globally setting CSP headers
@@ -59,7 +63,7 @@ def set_csp_headers(response):
     response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' https://cdn.jsdelivr.net; "
-            "style-src 'self' http://fonts.googleapis.com/css; "
+            f"style-src 'self' https://fonts.googleapis.com 'nonce-{g.nonce}'; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data:;"
             "form-action 'self'; "
