@@ -234,7 +234,7 @@ if __name__ == "__main__":
     #create database if it doesn't exist yet
     if not os.path.exists(app.database):
         init_db()
-    runport = 5000
+    runport = 5001 # Rerouted to 5000 via nginx
     if(len(sys.argv)==2):
         runport = sys.argv[1]
     try:
