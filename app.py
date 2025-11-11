@@ -1,4 +1,4 @@
-import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt
+import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt, string
 from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
 from flask_wtf.csrf import CSRFProtect
 
@@ -12,9 +12,15 @@ def init_db():
     """Initializes the database with our great SQL schema"""
     conn = connect_db()
     db = conn.cursor()
+
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    admin_pw = ''.join(secrets.choice(alphabet) for _ in range(16))  # 16-char random password
+
+    admin_pw_hash = bcrypt.hashpw(admin_pw.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    print("admin pw: %s" %admin_pw)
     db.executescript("""
 
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS users; 
 DROP TABLE IF EXISTS notes;
 
 CREATE TABLE notes (
@@ -31,13 +37,12 @@ CREATE TABLE users (
     password TEXT NOT NULL
 );
 
-INSERT INTO users VALUES(null,"admin", "password");
-INSERT INTO users VALUES(null,"bernardo", "omgMPC");
-INSERT INTO notes VALUES(null,2,"1993-09-23 10:10:10","hello my friend",1234567890);
-INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567891);
-
 """)
-
+    
+    statement = """INSERT INTO users(id,username,password) VALUES(null,?,?);"""
+    db.execute(statement, ("admin",admin_pw_hash))
+    conn.commit()
+    conn.close()
 
 
 ### APPLICATION SETUP ###
