@@ -19,7 +19,6 @@ def init_db():
     admin_pw = ''.join(secrets.choice(alphabet) for _ in range(16))  # 16-char random password
 
     admin_pw_hash = bcrypt.hashpw(admin_pw.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    print("admin pw: %s" %admin_pw)
     db.executescript("""
 
 DROP TABLE IF EXISTS users; 
@@ -43,6 +42,7 @@ CREATE TABLE users (
 """)
     
     statement = """INSERT INTO users(id,username,password) VALUES(null,?,?);"""
+    print("Admin Password (save this!): %s" %admin_pw)
     db.execute(statement, ("admin",admin_pw_hash))
     conn.commit()
     conn.close()
@@ -116,7 +116,7 @@ def notes():
                 publicNote = False
             db = connect_db()
             c = db.cursor()
-            statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,?,?,?,?);"""
+            statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID,publicNote) VALUES(null,?,?,?,?,?);"""
             print(statement)
             c.execute(statement, (session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999),publicNote))
             db.commit()
@@ -277,6 +277,23 @@ def logout():
     """Logout: clears the session"""
     session.clear()
     return redirect(url_for('index'))
+
+@app.route("/delete_user", methods=["POST"])
+@login_required
+def delete_user():
+    user_id = session['userid']
+
+    db = connect_db()
+    c = db.cursor()
+    statement = "DELETE FROM notes WHERE assocUser = ?"
+    c.execute(statement, (user_id,))
+    statement = "DELETE FROM users WHERE id = ?"
+    c.execute(statement, (user_id,))
+    db.commit()
+    db.close()
+    
+    session.clear()
+    return(redirect(url_for('index')))
 
 if __name__ == "__main__":
     #create database if it doesn't exist yet
