@@ -106,63 +106,55 @@ def index():
 def notes():
     importerror=""
     #Posting a new note:
-    if request.method == 'POST':
-        if request.form['submit_button'] == 'add note':
+    if request.method == 'POST' and request.form['submit_button'] == 'add note':
             note = request.form['noteinput']
             db = connect_db()
             c = db.cursor()
-            """ Legacy vulnerable code:
-            statement = ""INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,%s,'%s','%s',%s);"" %(session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999))
-            print(statement)
-            c.execute(statement)
-            """
             statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,?,?,?,?);"""
             print(statement)
             c.execute(statement, (session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999)))
             db.commit()
             db.close()
-        elif request.form['submit_button'] == 'import note':
-            noteid = request.form['noteid']
-            db = connect_db()
-            c = db.cursor()
-            """ Legacy vulnerable code:
-            statement = ""SELECT * from NOTES where publicID = %s"" %noteid
-            c.execute(statement)
-            """
-            statement = """SELECT * from NOTES where publicID = ?"""
-            c.execute(statement, (noteid,))
-            result = c.fetchall()
-            if(len(result)>0):
-                row = result[0]
-                """ Legacy vulnerable code:
-                statement = ""INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,%s,'%s','%s',%s);"" %(session['userid'],row[2],row[3],row[4])
-                c.execute(statement)
-                """
-                statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,?,?,?,?);"""
-                c.execute(statement, (session['userid'],row[2],row[3],row[4]))
-            else:
-                importerror="No such note with that ID!"
-            db.commit()
-            db.close()
+            return redirect(url_for('notes'))
     
     db = connect_db()
     c = db.cursor()
-    """ Legacy vulnerable code:
-    statement = "SELECT * FROM notes WHERE assocUser = %s;" %session['userid']
-    print(statement)
-    c.execute(statement)
-    """
     statement = "SELECT * FROM notes WHERE assocUser = ?;"
     print(statement)
     c.execute(statement, (session['userid'],))
     notes = c.fetchall()
-    print(notes)
+    db.close()
     
     return render_template('notes.html',notes=notes,importerror=importerror)
 
+@app.route("/notes/import/", methods=['POST'])
+@login_required
+@limiter.limit("20 per minute")
+def import_note():
+    importerror = ""
+    noteid = request.form['noteid']
+
+    db = connect_db()
+    c = db.cursor()
+    statement = """SELECT * FROM notes WHERE publicID = ?"""
+    c.execute(statement, (noteid,))
+    result = c.fetchall()
+
+    if len(result) > 0:
+        row = result[0]
+        insert_stmt = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID)
+                         VALUES(null,?,?,?,?);"""
+        c.execute(insert_stmt, (session['userid'], row[2], row[3], row[4]))
+        db.commit()
+        db.close()
+        return redirect(url_for('notes'))
+    else:
+        db.close()
+        importerror = "No such note with that ID!"
+        return render_template('notes.html', importerror=importerror)
 
 @app.route("/login/", methods=('GET', 'POST'))
-@limiter.limit(limit_value="5 per 5 minutes", error_message="Too many login attempts, please try again in 5 minutes.")
+@limiter.limit(limit_value="15 per 5 minutes", error_message="Too many login attempts, please try again in 5 minutes.")
 def login():
     error = ""
     if request.method == 'POST':
