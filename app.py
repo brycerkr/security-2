@@ -1,5 +1,5 @@
 import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt, string
-from flask import Flask, current_app, g, session, redirect, render_template, url_for, request, jsonify
+from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -30,7 +30,8 @@ CREATE TABLE notes (
     assocUser INTEGER NOT NULL,
     dateWritten DATETIME NOT NULL,
     note TEXT NOT NULL,
-    publicID INTEGER NOT NULL
+    publicID INTEGER NOT NULL,
+    publicNote BOOLEAN DEFAULT 0
 );
 
 CREATE TABLE users (
@@ -108,11 +109,16 @@ def notes():
     #Posting a new note:
     if request.method == 'POST' and request.form['submit_button'] == 'add note':
             note = request.form['noteinput']
+            try :
+                request.form['publicnote']
+                publicNote = True
+            except:
+                publicNote = False
             db = connect_db()
             c = db.cursor()
             statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,?,?,?,?);"""
             print(statement)
-            c.execute(statement, (session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999)))
+            c.execute(statement, (session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999),publicNote))
             db.commit()
             db.close()
             return redirect(url_for('notes'))
