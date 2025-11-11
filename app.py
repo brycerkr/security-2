@@ -22,7 +22,8 @@ CREATE TABLE notes (
     assocUser INTEGER NOT NULL,
     dateWritten DATETIME NOT NULL,
     note TEXT NOT NULL,
-    publicID INTEGER NOT NULL
+    publicID INTEGER NOT NULL,
+    publicNote BOOLEAN DEFAULT 0
 );
 
 CREATE TABLE users (
@@ -33,8 +34,8 @@ CREATE TABLE users (
 
 INSERT INTO users VALUES(null,"admin", "password");
 INSERT INTO users VALUES(null,"bernardo", "omgMPC");
-INSERT INTO notes VALUES(null,2,"1993-09-23 10:10:10","hello my friend",1234567890);
-INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567891);
+INSERT INTO notes VALUES(null,2,"1993-09-23 10:10:10","hello my friend",1234567890, 1);
+INSERT INTO notes VALUES(null,2,"1993-09-23 12:10:10","i want lunch pls",1234567891, 0);
 
 """)
 
@@ -98,6 +99,11 @@ def notes():
     if request.method == 'POST':
         if request.form['submit_button'] == 'add note':
             note = request.form['noteinput']
+            try :
+                request.form['publicnote']
+                publicNote = True
+            except:
+                publicNote = False
             db = connect_db()
             c = db.cursor()
             """ Legacy vulnerable code:
@@ -105,9 +111,9 @@ def notes():
             print(statement)
             c.execute(statement)
             """
-            statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID) VALUES(null,?,?,?,?);"""
+            statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID, publicNote) VALUES(null,?,?,?,?,?);"""
             print(statement)
-            c.execute(statement, (session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999)))
+            c.execute(statement, (session['userid'],time.strftime('%Y-%m-%d %H:%M:%S'),note,random.randrange(1000000000, 9999999999),publicNote))
             db.commit()
             db.close()
         elif request.form['submit_button'] == 'import note':
@@ -118,9 +124,10 @@ def notes():
             statement = ""SELECT * from NOTES where publicID = %s"" %noteid
             c.execute(statement)
             """
-            statement = """SELECT * from NOTES where publicID = ?"""
+            statement = """SELECT * from NOTES where publicID = ? AND publicNote = TRUE"""
             c.execute(statement, (noteid,))
             result = c.fetchall()
+            print(result)
             if(len(result)>0):
                 row = result[0]
                 """ Legacy vulnerable code:

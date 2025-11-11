@@ -159,6 +159,12 @@ ol, ul, dl {
   margin: 0 -15px;
 }
 
+.notes__checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
 .card-delete-button {
   position: absolute;
   bottom: 20px;
@@ -276,6 +282,10 @@ ol, ul, dl {
             <div class="notes__input-container">
               <label for="note">New note:</label>
               <textarea name="noteinput" placeholder=">Enter text here..." class="textfield form-control" value={{ request.form.noteinput }}></textarea><br>
+            </div>
+            <div class="notes__checkbox-container">
+                <input type="checkbox" id="publicnote" name="publicnote" value="True">
+                <label for="publicnote">Make note public</label>
             </div>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="add note">
