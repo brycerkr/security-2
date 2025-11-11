@@ -156,6 +156,13 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        if (username == "" or password == ""):
+            error = "Please provide both username and password!"
+            return render_template('login.html',error=error)
+        elif (len(username)>32 or len(password)>32):
+            error = "Username and password must be less than 32 characters!"
+            return render_template('login.html',error=error)
+        
         db = connect_db()
         c = db.cursor()
         """ Legacy vulnerable code:
