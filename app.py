@@ -1,3 +1,4 @@
+import base64
 import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt, string, pickle, io
 from flask import Flask, current_app, g, send_file, session, redirect, render_template, url_for, request
 from flask_wtf.csrf import CSRFProtect
@@ -316,7 +317,7 @@ def export_notes():
     notes = c.fetchall()
     db.close()
 
-    user_notes = pickle.dumps(notes)
+    user_notes = base64.urlsafe_b64encode(pickle.dumps(notes))
 
     file_obj = io.BytesIO(user_notes)
     file_obj.seek(0)
@@ -339,7 +340,8 @@ def import_notes():
     
     if file.filename == '':
         return render_template('notes.html', importerror="No file selected!")
-    data = file.read()
+    
+    data = base64.urlsafe_b64decode(file.read())
 
     notes = pickle.loads(data)
 
@@ -349,7 +351,7 @@ def import_notes():
     statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID,publicNote) VALUES(null,?,?,?,?,?);"""
 
     for n in notes:
-        if len(n) == 6:
+        if len(n) == 5:
             c.execute(statement, n,)
 
     db.commit()
