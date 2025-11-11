@@ -5,5 +5,5 @@
 - [X] Add brute-force protection (Flask-Limiter)
 - [ ] Improve Content-Security-Policy with use of nonces
 - [X] Implement node deletion
-- [ ] Implement user deletion
+- [X] Implement user deletion
 - [ ] Admin can change password
