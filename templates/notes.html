@@ -130,8 +130,8 @@ ol, ul, dl {
 
 .notes__delete-user {
   position: absolute;
-  right: 50px;
-  bottom: 30px;
+  right: 30px;
+  bottom: 50px;
 }
 
 .notes__title-user {
@@ -310,6 +310,21 @@ ol, ul, dl {
         {% if importerror %}
               <p class="p-large"><strong>Error:</strong> {{ importerror }}
         {% endif %}
+         <form action="{{ url_for('change_password') }}" method="post" class="notes__input-wrapper">
+             <div class="notes__input-container">
+                 <label for="newpassword">Change Password:</label>
+                 <input class="form-control notes__input" type="password" placeholder="New Password" id="newpassword" name="newpassword" value={{request.form.newpassword}}>
+             </div>
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="change password">
+         </form>
+              {% if passwordchangeerror %}
+              <p class="p-large"><strong>Error:</strong> {{ passwordchangeerror }}
+                  {% endif %}
+                  {% if passwordchangesuccess %}
+              <p class="p-large"><strong>Success:</strong> {{ passwordchangesuccess }}
+                  {% endif %}
+          </section>
       </section>
       <section>
         <form action="{{ url_for('delete_user') }}" method="post" class="notes__delete-user">
@@ -322,5 +337,5 @@ ol, ul, dl {
     <script src={{ url_for('static',filename='js/popper.min.js') }}></script>
     <script src={{ url_for('static',filename='js/bootstrap.min.js') }}></script>
     </body>
-
+    
 </html>
