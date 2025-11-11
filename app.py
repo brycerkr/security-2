@@ -129,7 +129,7 @@ def notes():
 
 @app.route("/notes/import/", methods=['POST'])
 @login_required
-@limiter.limit("20 per minute")
+@limiter.limit(limit_value="20 per minute", error_message="Too many imports, try again in a minute")
 def import_note():
     importerror = ""
     noteid = request.form['noteid']
@@ -194,6 +194,7 @@ def login():
 
 
 @app.route("/register/", methods=('GET', 'POST'))
+@limiter.limit(limit_value="5 per 5 minutes", error_message="Too many registrations, you can try again in 5 minutes.")
 def register():
     errored = False
     usererror = ""
