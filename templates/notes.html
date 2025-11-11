@@ -333,7 +333,7 @@ ol, ul, dl {
       </section>
       <section class="notes__body-content notes__body-bottom-padding">
           <div class="notes__body-top-border"></div>
-          <form action="{{ url_for('export_notes') }}" method="post" class="notes__input-wrapper">
+          <form action="{{ url_for('export_notes') }}" method="get" class="notes__input-wrapper">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="Export my notes">
           </form>

@@ -311,7 +311,7 @@ def export_notes():
 
     db = connect_db()
     c = db.cursor()
-    statement = "SELECT * FROM notes WHERE assocUser = ?"
+    statement = "SELECT assocUser, dateWritten, note, publicID, publicNote FROM notes WHERE assocUser = ?"
     c.execute(statement, (user_id,))
     notes = c.fetchall()
     db.close()
@@ -332,8 +332,13 @@ def export_notes():
 @login_required
 def import_notes():
     user_id = session['userid']
-
-    file = request.files('file')
+    if 'file' not in request.files:
+        return render_template('notes.html', importerror="No file part in the request!")
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return render_template('notes.html', importerror="No file selected!")
     data = file.read()
 
     notes = pickle.loads(data)
