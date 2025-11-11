@@ -6,3 +6,4 @@
 - [ ] Improve Content-Security-Policy with use of nonces
 - [X] Implement node deletion
 - [ ] Implement user deletion
+- [ ] Admin can change password
