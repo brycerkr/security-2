@@ -74,13 +74,16 @@ csrf = CSRFProtect(app)
 def set_csp_headers(response):
     response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' https://cdn.jsdelivr.net; "
+            f"script-src 'self' https://cdn.jsdelivr.net; 'nonce-{g.nonce}';"
             f"style-src 'self' https://fonts.googleapis.com 'nonce-{g.nonce}'; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data:;"
             "form-action 'self'; "
             "frame-ancestors 'none';"
     )
+
+    response.headers["X-Content-Type-Options"] = "nosniff" #x-content-type-options header 
+
     # Fix Version Info vulnerability (doesn't work)
     response.headers.pop('Server', None)
     return response
@@ -142,13 +145,13 @@ def import_note():
 
     db = connect_db()
     c = db.cursor()
-    statement = """SELECT * FROM notes WHERE publicID = ?"""
+    statement = """SELECT * FROM notes WHERE publicID = ? AND publicNote = 1;"""
     c.execute(statement, (noteid,))
     result = c.fetchall()
 
     if len(result) > 0:
         row = result[0]
-        insert_stmt = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID)
+        insert_stmt = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID, publicNote)
                          VALUES(null,?,?,?,?);"""
         c.execute(insert_stmt, (session['userid'], row[2], row[3], row[4]))
         db.commit()
@@ -222,6 +225,12 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        if (username == "" or password == ""):
+            usererror = "Please provide both username and password!"
+            errored = True
+        elif (len(username)>32 or len(password)>32):
+            usererror = "Username and password must be less than 32 characters!"
+            errored = True
         pw_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         db = connect_db()
         c = db.cursor()
@@ -342,6 +351,24 @@ def import_notes():
     db.close()
 
     return redirect(url_for('notes'))
+
+@app.route("/change_password", methods=["POST"])
+@login_required
+def change_password():
+    user_id = session['userid']
+    new_password = request.form['newpassword']
+    if new_password == "" or len(new_password)>32:
+        return(render_template('notes.html', passwordchangeerror="Password must be between 1 and 32 characters!"))
+    pw_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    db = connect_db()
+    c = db.cursor()
+    statement = "UPDATE users SET password = ? WHERE id = ?"
+    c.execute(statement, (pw_hash, user_id))
+    db.commit()
+    db.close()
+
+    return(render_template('notes.html', passwordchangesuccess="Password changed successfully!"))
 
 if __name__ == "__main__":
     #create database if it doesn't exist yet

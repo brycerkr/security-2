@@ -130,8 +130,8 @@ ol, ul, dl {
 
 .notes__delete-user {
   position: absolute;
-  right: 50px;
-  bottom: 30px;
+  right: 30px;
+  bottom: 50px;
 }
 
 .notes__title-user {
@@ -166,9 +166,10 @@ ol, ul, dl {
 }
 
 .notes__checkbox-container {
-    display: flex;
+    display: inline-flex;
+    flex-direction: row;
     align-items: flex-start;
-    gap: 8px;
+    white-space: nowrap;
 }
 
 .card-delete-button {
@@ -292,8 +293,8 @@ ol, ul, dl {
             </div>
             <div class="notes__checkbox-container">
                 <input type="checkbox" id="publicnote" name="publicnote" value="True">
-                <label for="publicnote">Make note public</label>
-            </div>
+                <label for="publicnote" id="publicnote-text">Make note public</label>
+            </div> <br>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="add note">
         </form> 
@@ -309,6 +310,20 @@ ol, ul, dl {
         {% if importerror %}
               <p class="p-large"><strong>Error:</strong> {{ importerror }}
         {% endif %}
+         <form action="{{ url_for('change_password') }}" method="post" class="notes__input-wrapper">
+             <div class="notes__input-container">
+                 <label for="newpassword">Change Password:</label>
+                 <input class="form-control notes__input" type="password" placeholder="New Password" id="newpassword" name="newpassword" value={{request.form.newpassword}}>
+             </div>
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="change password">
+         </form>
+          {% if passwordchangeerror %}
+          <p class="p-large"><strong>Error:</strong> {{ passwordchangeerror }}
+              {% endif %}
+              {% if passwordchangesuccess %}
+          <p class="p-large"><strong>Success:</strong> {{ passwordchangesuccess }}
+              {% endif %}
       </section>
       <section>
         <form action="{{ url_for('delete_user') }}" method="post" class="notes__delete-user">
@@ -316,10 +331,25 @@ ol, ul, dl {
           <button href="#" class="btn-solid-lg">Delete User</button>
         </form> 
       </section>
+      <section class="notes__body-content notes__body-bottom-padding">
+          <div class="notes__body-top-border"></div>
+          <form action="{{ url_for('export_notes') }}" method="post" class="notes__input-wrapper">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="Export my notes">
+          </form>
+          <form action="{{ url_for('import_notes') }}" method="post" enctype="multipart/form-data">
+              <div class="notes__input-container">
+                  <label for="file">Import File:</label>
+                  <input type="file" id="file" name="file" class="form-control">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input class="btn-solid-lg notes__input-margin-top" type="submit" value="Import">
+              </div>
+          </form>
+      </section>
       
     <script src={{ url_for('static',filename='js/jquery.min.js') }}></script>
     <script src={{ url_for('static',filename='js/popper.min.js') }}></script>
     <script src={{ url_for('static',filename='js/bootstrap.min.js') }}></script>
     </body>
-
+    
 </html>
