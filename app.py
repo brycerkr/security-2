@@ -152,6 +152,20 @@ def import_note():
         db.close()
         importerror = "No such note with that ID!"
         return render_template('notes.html', importerror=importerror)
+    
+@app.route("/notes/delete/<int:note_id>", methods=['POST'])
+@login_required
+def delete_note(note_id):
+    user_id = session['userid']
+
+    db = connect_db()
+    c = db.cursor()
+    statement = "DELETE FROM notes WHERE id = ? AND assocUser = ?"
+    c.execute(statement, (note_id, user_id))
+    db.commit()
+    db.close()
+
+    return(redirect(url_for('notes')))
 
 @app.route("/login/", methods=('GET', 'POST'))
 @limiter.limit(limit_value="15 per 5 minutes", error_message="Too many login attempts, please try again in 5 minutes.")
