@@ -291,7 +291,7 @@ ol, ul, dl {
             <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="add note">
         </form> 
         
-        <form action="" method="post" class="notes__input-wrapper">
+        <form action="{{ url_for('import_note') }}" method="post" class="notes__input-wrapper">
             <div class="notes__input-container">
               <label for="note">Import a note from someone else:</label>
               <input class="form-control notes__input__no-margin" type="text" placeholder="XXXXXXXXXX" name="noteid" value={{request.form.noteid}}>
