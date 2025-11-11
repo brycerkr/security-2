@@ -318,19 +318,33 @@ ol, ul, dl {
              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
              <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="change password">
          </form>
-              {% if passwordchangeerror %}
-              <p class="p-large"><strong>Error:</strong> {{ passwordchangeerror }}
-                  {% endif %}
-                  {% if passwordchangesuccess %}
-              <p class="p-large"><strong>Success:</strong> {{ passwordchangesuccess }}
-                  {% endif %}
-          </section>
+          {% if passwordchangeerror %}
+          <p class="p-large"><strong>Error:</strong> {{ passwordchangeerror }}
+              {% endif %}
+              {% if passwordchangesuccess %}
+          <p class="p-large"><strong>Success:</strong> {{ passwordchangesuccess }}
+              {% endif %}
       </section>
       <section>
         <form action="{{ url_for('delete_user') }}" method="post" class="notes__delete-user">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button href="#" class="btn-solid-lg">Delete User</button>
         </form> 
+      </section>
+      <section class="notes__body-content notes__body-bottom-padding">
+          <div class="notes__body-top-border"></div>
+          <form action="{{ url_for('export_notes') }}" method="post" class="notes__input-wrapper">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input class="btn-solid-lg notes__input-margin-top" type="submit" name="submit_button" value="Export my notes">
+          </form>
+          <form action="{{ url_for('import_notes') }}" method="post" enctype="multipart/form-data">
+              <div class="notes__input-container">
+                  <label for="file">Import File:</label>
+                  <input type="file" id="file" name="file" class="form-control">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input class="btn-solid-lg notes__input-margin-top" type="submit" value="Import">
+              </div>
+          </form>
       </section>
       
     <script src={{ url_for('static',filename='js/jquery.min.js') }}></script>
