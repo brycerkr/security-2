@@ -1,5 +1,5 @@
-import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt, string
-from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
+import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt, string, pickle, io
+from flask import Flask, current_app, g, send_file, session, redirect, render_template, url_for, request
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -303,6 +303,54 @@ def delete_user():
     
     session.clear()
     return(redirect(url_for('index')))
+
+@app.route("/export_notes", methods=["GET"])
+@login_required
+def export_notes():
+    user_id = session['userid']
+
+    db = connect_db()
+    c = db.cursor()
+    statement = "SELECT * FROM notes WHERE assocUser = ?"
+    c.execute(statement, (user_id,))
+    notes = c.fetchall()
+    db.close()
+
+    user_notes = pickle.dumps(notes)
+
+    file_obj = io.BytesIO(user_notes)
+    file_obj.seek(0)
+
+    return send_file(
+        file_obj,
+        mimetype='application/octet-stream',
+        as_attachment=True,
+        download_name=f'user_{user_id}_notes.pkl'
+    )
+
+@app.route("/import_notes", methods=["POST"])
+@login_required
+def import_notes():
+    user_id = session['userid']
+
+    file = request.files('file')
+    data = file.read()
+
+    notes = pickle.loads(data)
+
+    db = connect_db()
+    c = db.cursor()
+
+    statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID,publicNote) VALUES(null,?,?,?,?,?);"""
+
+    for n in notes:
+        if len(n) == 6:
+            c.execute(statement, n,)
+
+    db.commit()
+    db.close()
+
+    return redirect(url_for('notes'))
 
 @app.route("/change_password", methods=["POST"])
 @login_required
