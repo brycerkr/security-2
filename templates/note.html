@@ -3,6 +3,9 @@
       <h5 class="card-title notes__card-title">Public Note ID: {{note[4]}}</h5>
       <h6 class="card-subtitle mb-2 notes__card-subtitle">note written on: <span class="notes__card-subtitle--date ">{{ note[2] }}</span></h6>
       <p class="card-text">{{ note[3] }}</p>
-      <button href="#" class="card-link card-delete-button btn-outline-sm">Delete</button>
+      <form action="{{ url_for('delete_note', note_id=note[0]) }}" method="post" class="card-delete-button">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button href="#" class="card-link card-delete-button btn-outline-sm">Delete</button>
+      </form>
     </div>
   </li>
