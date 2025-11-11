@@ -145,13 +145,13 @@ def import_note():
 
     db = connect_db()
     c = db.cursor()
-    statement = """SELECT * FROM notes WHERE publicID = ?"""
+    statement = """SELECT * FROM notes WHERE publicID = ? AND publicNote = 1;"""
     c.execute(statement, (noteid,))
     result = c.fetchall()
 
     if len(result) > 0:
         row = result[0]
-        insert_stmt = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID)
+        insert_stmt = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID, publicNote)
                          VALUES(null,?,?,?,?);"""
         c.execute(insert_stmt, (session['userid'], row[2], row[3], row[4]))
         db.commit()
