@@ -1,6 +1,8 @@
 import json, sqlite3, secrets, click, functools, os, hashlib,time, random, sys, bcrypt, string
-from flask import Flask, current_app, g, session, redirect, render_template, url_for, request
+from flask import Flask, current_app, g, session, redirect, render_template, url_for, request, jsonify
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 
 ### DATABASE FUNCTIONS ###
@@ -47,6 +49,11 @@ CREATE TABLE users (
 
 ### APPLICATION SETUP ###
 app = Flask(__name__)
+limiter = Limiter(
+    get_remote_address,
+    app = app,
+    storage_uri="memory://"
+)
 app.database = "db.sqlite3"
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,  # Prevent JS access
@@ -64,7 +71,6 @@ csrf = CSRFProtect(app)
 ### Globally setting CSP headers
 @app.after_request
 def set_csp_headers(response):
-    print("Setting CSP headers")
     response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' https://cdn.jsdelivr.net; "
@@ -156,6 +162,7 @@ def notes():
 
 
 @app.route("/login/", methods=('GET', 'POST'))
+@limiter.limit(limit_value="5 per 5 minutes", error_message="Too many login attempts, please try again in 5 minutes.")
 def login():
     error = ""
     if request.method == 'POST':
