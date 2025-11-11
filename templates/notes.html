@@ -339,7 +339,7 @@ ol, ul, dl {
           </form>
           <form action="{{ url_for('import_notes') }}" method="post" enctype="multipart/form-data">
               <div class="notes__input-container">
-                  <label for="file">Import File:</label>
+                  <label for="file">Import your notes:</label>
                   <input type="file" id="file" name="file" class="form-control">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input class="btn-solid-lg notes__input-margin-top" type="submit" value="Import">
