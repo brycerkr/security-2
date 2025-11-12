@@ -333,6 +333,8 @@ def export_notes():
 @login_required
 def import_notes():
     user_id = session['userid']
+    importerror = ""
+
     if 'file' not in request.files:
         return render_template('notes.html', importerror="No file part in the request!")
     
@@ -350,14 +352,17 @@ def import_notes():
 
     statement = """INSERT INTO notes(id,assocUser,dateWritten,note,publicID,publicNote) VALUES(null,?,?,?,?,?);"""
 
-    for n in notes:
-        if len(n) == 5:
-            c.execute(statement, n,)
+    try:
+        for n in notes:
+            if len(n) == 5:
+                c.execute(statement, n,)
+    except:
+        importerror = "Something went wrong when importing notes."
 
     db.commit()
     db.close()
 
-    return redirect(url_for('notes'))
+    return render_template('notes.html', importerror = importerror)
 
 @app.route("/change_password", methods=["POST"])
 @login_required
